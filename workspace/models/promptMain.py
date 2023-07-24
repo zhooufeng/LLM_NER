@@ -11,7 +11,7 @@ sys.path.append(os.getcwd())
 
 
 def detail(JsonIn, model):
-    INFO("对事件j")
+    INFO("对事件进行归类和细节分析")
     pos = 0
     relationJson = json.loads(JsonIn)
     for item in relationJson["因果关系"]:
@@ -69,7 +69,8 @@ def process(Text, model):
     try:
         return detail(relationJson, model)
     except Exception as e:
-        return f"ERROR:{e}"
+        WARNING("ERROR in function 'detail'")
+        raise e
 
 if __name__ == "__main__":
     text = "卢卡申科接着说：“热舒夫对他们来说是不可接受的。他们在阿尔捷莫夫斯克郊区作战时，他们知道（乌克兰的）军车来自哪里，他们由此印象深刻：热舒夫是我们的麻烦。当然，正如我们一致同意的，我把他们安顿在了白俄罗斯中部，我不想重新部署他们，因为他们现在精神有些低落……”"
