@@ -2,6 +2,7 @@ from Utils.extractJson import extractJson, JsonValidate
 from Utils.GetRelationShips import GetRelationShips
 from Utils.GetEventType import GetEventType
 from Utils.GetEventDetail import GetEventDetail
+from configs.pathcfg import Pcfg
 # from Utils.load_model import chatglm
 import json
 import os
@@ -52,12 +53,13 @@ def detail(JsonIn, model):
             }
         }
         pos += 1
+    INFO("事件归类和细节分析成功")
     return relationJson
 
 
 def process(Text, model):
     cnt = 0
-    maxcnt = 5
+    maxcnt = Pcfg.maxRework
     while cnt < maxcnt:
         cnt += 1
         try:

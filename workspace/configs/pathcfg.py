@@ -11,6 +11,7 @@ class cfg:
         self.output = os.path.join(self.root, "output")
         self.configs = os.path.join(self.root, "configs")
         self.LLMPath = "../THUDM/chatglm2-6b"
+        self.maxRework=10
 
 
 Pcfg = cfg()
