@@ -24,6 +24,8 @@ def JsonValidate(json_str):
     try:
         # DEBUG(json_str)
         json_object = json.loads(json_str)
+        if "因果关系" not in json_object or "顺承关系" not in json_object:
+            return False
     except json.JSONDecodeError:
         return False
     return True

@@ -56,21 +56,31 @@ def detail(JsonIn, model):
 
 
 def process(Text, model):
-    INFO("对输入文本进行事件抽取")
-    relation = GetRelationShips(Text, model)
-    # DEBUG(f"relation from LLM:{relation}")
-    relationJson = extractJson(relation)
-    relationJson = relationJson if JsonValidate(relationJson) else 'Json Invalidate'
-    if not JsonValidate(relationJson):
-        WARNING("大模型输出的json格式有误")
-        return
-    else:
-        INFO("成功得到事件关系json")
-    try:
-        return detail(relationJson, model)
-    except Exception as e:
-        WARNING("ERROR in function 'detail'")
-        raise e
+    cnt = 0
+    maxcnt = 5
+    while cnt < maxcnt:
+        cnt += 1
+        try:
+            INFO(f"尝试对输入文本进行事件抽取({cnt}/{maxcnt}次)")
+            relation = GetRelationShips(Text, model)
+            # DEBUG(f"relation from LLM:{relation}")
+            relationJson = extractJson(relation)
+            # DEBUG(f"relationJson from LLM:{relationJson}")
+            relationJson = relationJson if JsonValidate(relationJson) else 'Json Invalidate'
+            if not JsonValidate(relationJson):
+                WARNING("大模型输出的json格式有误")
+                continue
+            else:
+                INFO("成功得到事件关系json")
+            try:
+                return detail(relationJson, model)
+            except:
+                WARNING("大模型事件细节分析有误")
+                continue
+        except Exception as e:
+            WARNING("大模型输出的json格式有误")
+            continue
+    return -1
 
 if __name__ == "__main__":
     text = "卢卡申科接着说：“热舒夫对他们来说是不可接受的。他们在阿尔捷莫夫斯克郊区作战时，他们知道（乌克兰的）军车来自哪里，他们由此印象深刻：热舒夫是我们的麻烦。当然，正如我们一致同意的，我把他们安顿在了白俄罗斯中部，我不想重新部署他们，因为他们现在精神有些低落……”"

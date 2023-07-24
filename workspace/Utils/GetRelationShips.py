@@ -32,21 +32,13 @@ Question1 = """
 """
 
 def GetRelationShips(text, model=None):
-    count = 0
-    flag = False
-    while count < 5 and flag == False:
-        prompt = background + Example1 + Example2 + Question1.format(text)
-        if model == None:
-            model = chatglm()
-        # DEBUG(f"prompt:{prompt}")
-        relation = model.response(prompt)[0]
-        relationJson = extractJson(relation)
-        relationJson = relationJson if JsonValidate(relationJson) else 'Json Invalidate'
-        if not JsonValidate(relationJson):
-            count += 1
-            WARNING(f"大模型输出的json格式有误，尝试重新生成第{count}次")
-        else:
-            flag=True
+    prompt = background + Example1 + Example2 + Question1.format(text)
+    if model == None:
+        model = chatglm()
+    # DEBUG(f"prompt:{prompt}")
+    relation = model.response(prompt)[0]
+    relationJson = extractJson(relation)
+    relationJson = relationJson if JsonValidate(relationJson) else 'Json Invalidate'
     return relationJson
 
 
