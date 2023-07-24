@@ -1,5 +1,6 @@
 import re
 import json
+from Utils.debugformat import INFO, DEBUG, WARNING
 
 def extractJson(text):
     match = re.search(r'{[^{}]+}', text)
@@ -8,7 +9,7 @@ def extractJson(text):
         return json_str
     else:
         return None
-    
+"""  
 def JsonValidate(text):
     try:
         if len(text.replace("{", "")) + 1 == len(text) and len(text.replace("}", "")) + 1 == len(text):
@@ -16,7 +17,18 @@ def JsonValidate(text):
         return False
     except:
         return False
-    
+"""
+
+
+def JsonValidate(json_str):
+    try:
+        # DEBUG(json_str)
+        json_object = json.loads(json_str)
+    except json.JSONDecodeError:
+        return False
+    return True
+
+
 if __name__ == "__main__":
     text = """{
 '因果关系': ['研究人员发现透明部落利用外贸主题的链接进行攻击活动样本'],

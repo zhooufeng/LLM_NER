@@ -17,7 +17,7 @@ class chatglm:
             if history==None:
                 history = []
             res, history = self.model.chat(self.tokenizer, textIn, history=history)
-            return res
+            return res, history
         except Exception as e:
             return -1, e
         

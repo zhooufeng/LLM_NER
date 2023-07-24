@@ -1,4 +1,6 @@
 import time
+import os
+import inspect
 
 
 def calcTime():
@@ -10,15 +12,22 @@ def calcTime():
 
 
 def INFO(TextIn):
-    print(f"[INFO]\t{calcTime()}: {TextIn}")  # 使用制表符来对齐
+    # 获取调用栈信息
+    caller_frame = inspect.currentframe().f_back
+    caller_filename = inspect.getframeinfo(caller_frame).filename
+    print(f"[INFO]\tin file {os.path.basename(caller_filename)}\t{calcTime()}: {TextIn}")
 
 
 def DEBUG(TextIn):
-    print(f"[DEBUG]\t{calcTime()}: {TextIn}")  # 使用制表符来对齐
+    caller_frame = inspect.currentframe().f_back
+    caller_filename = inspect.getframeinfo(caller_frame).filename
+    print(f"[DEBUG]\tin file {os.path.basename(caller_filename)}\t{calcTime()}: {TextIn}")
 
 
 def WARNING(TextIn):
-    print(f"[WARNING]\t{calcTime()}: {TextIn}")  # 使用制表符来对齐
+    caller_frame = inspect.currentframe().f_back
+    caller_filename = inspect.getframeinfo(caller_frame).filename
+    print(f"[WARNING]\tin file {os.path.basename(caller_filename)}\t{calcTime()}: {TextIn}")
 
 
 if __name__ == '__main__':

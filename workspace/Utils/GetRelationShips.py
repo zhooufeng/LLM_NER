@@ -1,4 +1,6 @@
 from load_model import chatglm
+from Utils.debugformat import INFO, DEBUG, WARNING
+from Utils.extractJson import extractJson, JsonValidate
 
 background = """
 我希望你能够以一名语言学家的身份完成我的任务。
@@ -30,10 +32,22 @@ Question1 = """
 """
 
 def GetRelationShips(text, model=None):
-    prompt = background + Example1 + Example2 + Question1.format(text)
-    if model == None:
-        model = chatglm()
-    return model.response(prompt)[0]
+    count = 0
+    flag = False
+    while count < 5 and flag == False:
+        prompt = background + Example1 + Example2 + Question1.format(text)
+        if model == None:
+            model = chatglm()
+        # DEBUG(f"prompt:{prompt}")
+        relation = model.response(prompt)[0]
+        relationJson = extractJson(relation)
+        relationJson = relationJson if JsonValidate(relationJson) else 'Json Invalidate'
+        if not JsonValidate(relationJson):
+            count += 1
+            WARNING(f"大模型输出的json格式有误，尝试重新生成第{count}次")
+        else:
+            flag=True
+    return relationJson
 
 
 if __name__ == "__main__":
