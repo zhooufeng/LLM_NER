@@ -36,7 +36,7 @@ app.add_middleware(
 
 class ModelCard(BaseModel):
     id: str
-    object: str = "model"
+    object: str = "models"
     created: int = Field(default_factory=lambda: int(time.time()))
     owned_by: str = "owner"
     root: Optional[str] = None
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     model = AutoModel.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True).cuda()
     # 多显卡支持，使用下面两行代替上面一行，将num_gpus改为你实际的显卡数量
     # from utils import load_model_on_gpus
-    # model = load_model_on_gpus("THUDM/chatglm2-6b", num_gpus=2)
+    # models = load_model_on_gpus("THUDM/chatglm2-6b", num_gpus=2)
     model.eval()
 
     uvicorn.run(app, host='0.0.0.0', port=8000, workers=1)

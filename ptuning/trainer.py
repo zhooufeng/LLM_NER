@@ -225,7 +225,7 @@ class Trainer:
 
     Args:
         model ([`PreTrainedModel`] or `torch.nn.Module`, *optional*):
-            The model to train, evaluate or use for predictions. If not provided, a `model_init` must be passed.
+            The models to train, evaluate or use for predictions. If not provided, a `model_init` must be passed.
 
             <Tip>
 
@@ -244,7 +244,7 @@ class Trainer:
             [`DataCollatorWithPadding`] otherwise.
         train_dataset (`torch.utils.data.Dataset` or `torch.utils.data.IterableDataset`, *optional*):
             The dataset to use for training. If it is a [`~datasets.Dataset`], columns not accepted by the
-            `model.forward()` method are automatically removed.
+            `models.forward()` method are automatically removed.
 
             Note that if it's a `torch.utils.data.IterableDataset` with some randomization and you are training in a
             distributed fashion, your iterable dataset should either use a internal attribute `generator` that is a
@@ -253,15 +253,15 @@ class Trainer:
             sets the seed of the RNGs used.
         eval_dataset (Union[`torch.utils.data.Dataset`, Dict[str, `torch.utils.data.Dataset`]), *optional*):
              The dataset to use for evaluation. If it is a [`~datasets.Dataset`], columns not accepted by the
-             `model.forward()` method are automatically removed. If it is a dictionary, it will evaluate on each
+             `models.forward()` method are automatically removed. If it is a dictionary, it will evaluate on each
              dataset prepending the dictionary key to the metric name.
         tokenizer ([`PreTrainedTokenizerBase`], *optional*):
             The tokenizer used to preprocess the data. If provided, will be used to automatically pad the inputs to the
-            maximum length when batching inputs, and it will be saved along the model to make it easier to rerun an
-            interrupted training or reuse the fine-tuned model.
+            maximum length when batching inputs, and it will be saved along the models to make it easier to rerun an
+            interrupted training or reuse the fine-tuned models.
         model_init (`Callable[[], PreTrainedModel]`, *optional*):
-            A function that instantiates the model to be used. If provided, each call to [`~Trainer.train`] will start
-            from a new instance of the model as given by this function.
+            A function that instantiates the models to be used. If provided, each call to [`~Trainer.train`] will start
+            from a new instance of the models as given by this function.
 
             The function may have zero argument, or a single one containing the optuna/Ray Tune/SigOpt trial object, to
             be able to choose different architectures according to hyper parameters (such as layer count, sizes of
@@ -275,7 +275,7 @@ class Trainer:
 
             If you want to remove one of the default callbacks used, use the [`Trainer.remove_callback`] method.
         optimizers (`Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`, *optional*): A tuple
-            containing the optimizer and the scheduler to use. Will default to an instance of [`AdamW`] on your model
+            containing the optimizer and the scheduler to use. Will default to an instance of [`AdamW`] on your models
             and a scheduler given by [`get_linear_schedule_with_warmup`] controlled by `args`.
         preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`, *optional*):
             A function that preprocess the logits right before caching them at each evaluation step. Must take two
@@ -286,18 +286,18 @@ class Trainer:
 
     Important attributes:
 
-        - **model** -- Always points to the core model. If using a transformers model, it will be a [`PreTrainedModel`]
+        - **models** -- Always points to the core models. If using a transformers models, it will be a [`PreTrainedModel`]
           subclass.
-        - **model_wrapped** -- Always points to the most external model in case one or more other modules wrap the
-          original model. This is the model that should be used for the forward pass. For example, under `DeepSpeed`,
-          the inner model is wrapped in `DeepSpeed` and then again in `torch.nn.DistributedDataParallel`. If the inner
-          model hasn't been wrapped, then `self.model_wrapped` is the same as `self.model`.
-        - **is_model_parallel** -- Whether or not a model has been switched to a model parallel mode (different from
-          data parallelism, this means some of the model layers are split on different GPUs).
-        - **place_model_on_device** -- Whether or not to automatically place the model on the device - it will be set
-          to `False` if model parallel or deepspeed is used, or if the default
+        - **model_wrapped** -- Always points to the most external models in case one or more other modules wrap the
+          original models. This is the models that should be used for the forward pass. For example, under `DeepSpeed`,
+          the inner models is wrapped in `DeepSpeed` and then again in `torch.nn.DistributedDataParallel`. If the inner
+          models hasn't been wrapped, then `self.model_wrapped` is the same as `self.models`.
+        - **is_model_parallel** -- Whether or not a models has been switched to a models parallel mode (different from
+          data parallelism, this means some of the models layers are split on different GPUs).
+        - **place_model_on_device** -- Whether or not to automatically place the models on the device - it will be set
+          to `False` if models parallel or deepspeed is used, or if the default
           `TrainingArguments.place_model_on_device` is overridden to return `False` .
-        - **is_in_train** -- Whether or not a model is currently running `train` (e.g. when `evaluate` is called while
+        - **is_in_train** -- Whether or not a models is currently running `train` (e.g. when `evaluate` is called while
           in `train`)
 
     """
@@ -325,7 +325,7 @@ class Trainer:
             logger.info(f"No `TrainingArguments` passed, using `output_dir={output_dir}`.")
             args = TrainingArguments(output_dir=output_dir)
         self.args = args
-        # Seed must be set before instantiating the model when using model
+        # Seed must be set before instantiating the models when using models
         enable_full_determinism(self.args.seed) if self.args.full_determinism else set_seed(self.args.seed)
         self.hp_name = None
         self.deepspeed = None
@@ -347,12 +347,12 @@ class Trainer:
                 self.model_init = model_init
                 model = self.call_model_init()
             else:
-                raise RuntimeError("`Trainer` requires either a `model` or `model_init` argument")
+                raise RuntimeError("`Trainer` requires either a `models` or `model_init` argument")
         else:
             if model_init is not None:
                 warnings.warn(
-                    "`Trainer` requires either a `model` or `model_init` argument, but not both. `model_init` will"
-                    " overwrite your model when calling the `train` method. This will become a fatal error in the next"
+                    "`Trainer` requires either a `models` or `model_init` argument, but not both. `model_init` will"
+                    " overwrite your models when calling the `train` method. This will become a fatal error in the next"
                     " release.",
                     FutureWarning,
                 )
@@ -360,8 +360,8 @@ class Trainer:
 
         if model.__class__.__name__ in MODEL_MAPPING_NAMES:
             raise ValueError(
-                f"The model you have picked ({model.__class__.__name__}) cannot be used as is for training: it only "
-                "computes hidden states and does not accept any labels. You should choose a model with a head "
+                f"The models you have picked ({model.__class__.__name__}) cannot be used as is for training: it only "
+                "computes hidden states and does not accept any labels. You should choose a models with a head "
                 "suitable for your task like any of the `AutoModelForXxx` listed at "
                 "https://huggingface.co/docs/transformers/model_doc/auto."
             )
@@ -371,19 +371,19 @@ class Trainer:
         else:
             self.is_model_parallel = False
 
-        # At this stage the model is already loaded
+        # At this stage the models is already loaded
         if getattr(model, "is_loaded_in_8bit", False):
             if getattr(model, "_is_int8_training_enabled", False):
                 logger.info(
-                    "The model is loaded in 8-bit precision. To train this model you need to add additional modules"
-                    " inside the model such as adapters using `peft` library and freeze the model weights. Please"
+                    "The models is loaded in 8-bit precision. To train this models you need to add additional modules"
+                    " inside the models such as adapters using `peft` library and freeze the models weights. Please"
                     " check "
                     " the examples in https://github.com/huggingface/peft for more details."
                 )
             else:
                 raise ValueError(
-                    "The model you want to train is loaded in 8-bit precision.  if you want to fine-tune an 8-bit"
-                    " model, please make sure that you have installed `bitsandbytes>=0.37.0`. "
+                    "The models you want to train is loaded in 8-bit precision.  if you want to fine-tune an 8-bit"
+                    " models, please make sure that you have installed `bitsandbytes>=0.37.0`. "
                 )
 
         # Setup Sharded DDP training
@@ -451,12 +451,12 @@ class Trainer:
             if self.args.fsdp_config.get("limit_all_gathers", False):
                 self.limit_all_gathers = True
 
-        # one place to sort out whether to place the model on device or not
-        # postpone switching model to cuda when:
-        # 1. MP - since we are trying to fit a much bigger than 1 gpu model
-        # 2. fp16-enabled DeepSpeed loads the model in half the size and it doesn't need .to() anyway,
+        # one place to sort out whether to place the models on device or not
+        # postpone switching models to cuda when:
+        # 1. MP - since we are trying to fit a much bigger than 1 gpu models
+        # 2. fp16-enabled DeepSpeed loads the models in half the size and it doesn't need .to() anyway,
         #    and we only use deepspeed for training at the moment
-        # 3. full bf16 or fp16 eval - since the model needs to be cast to the right dtype first
+        # 3. full bf16 or fp16 eval - since the models needs to be cast to the right dtype first
         # 4. Sharded DDP - same as MP
         # 5. FSDP - same as MP
         self.place_model_on_device = args.place_model_on_device
@@ -482,7 +482,7 @@ class Trainer:
         if self.is_model_parallel:
             self.args._n_gpu = 1
 
-        # later use `self.model is self.model_wrapped` to check if it's wrapped or not
+        # later use `self.models is self.model_wrapped` to check if it's wrapped or not
         self.model_wrapped = model
         self.model = model
 
@@ -504,10 +504,10 @@ class Trainer:
                     break
             if model_device != optimizer_device:
                 raise ValueError(
-                    "The model and the optimizer parameters are not on the same device, which probably means you"
-                    " created an optimizer around your model **before** putting on the device and passing it to the"
+                    "The models and the optimizer parameters are not on the same device, which probably means you"
+                    " created an optimizer around your models **before** putting on the device and passing it to the"
                     " `Trainer`. Make sure the lines `import torch_xla.core.xla_model as xm` and"
-                    " `model.to(xm.xla_device())` is performed before the optimizer creation in your script."
+                    " `models.to(xm.xla_device())` is performed before the optimizer creation in your script."
                 )
         if ((self.sharded_ddp is not None) or args.deepspeed or (self.fsdp is not None)) and (
             self.optimizer is not None or self.lr_scheduler is not None
@@ -563,7 +563,7 @@ class Trainer:
 
         # Mixed precision setup for SageMaker Model Parallel
         if is_sagemaker_mp_enabled():
-            # BF16 + model parallelism in SageMaker: currently not supported, raise an error
+            # BF16 + models parallelism in SageMaker: currently not supported, raise an error
             if args.bf16:
                 raise ValueError("SageMaker Model Parallelism does not support BF16 yet. Please use FP16 instead ")
 
@@ -632,7 +632,7 @@ class Trainer:
                     )
                 self.use_apex = True
 
-        # FP16 + model parallelism in SageMaker: gradient clipping does not work for now so we raise a helpful error.
+        # FP16 + models parallelism in SageMaker: gradient clipping does not work for now so we raise a helpful error.
         if (
             is_sagemaker_mp_enabled()
             and self.use_cuda_amp
@@ -716,13 +716,13 @@ class Trainer:
 
     def _move_model_to_device(self, model, device):
         model = model.to(device)
-        # Moving a model to an XLA device disconnects the tied weights, so we have to retie them.
+        # Moving a models to an XLA device disconnects the tied weights, so we have to retie them.
         if self.args.parallel_mode == ParallelMode.TPU and hasattr(model, "tie_weights"):
             model.tie_weights()
 
     def _set_signature_columns_if_needed(self):
         if self._signature_columns is None:
-            # Inspect model forward signature to keep only the arguments it accepts.
+            # Inspect models forward signature to keep only the arguments it accepts.
             signature = inspect.signature(self.model.forward)
             self._signature_columns = list(signature.parameters.keys())
             # Labels may be named label or label_ids, the default data collator handles that.
@@ -931,7 +931,7 @@ class Trainer:
         Args:
             eval_dataset (`torch.utils.data.Dataset`, *optional*):
                 If provided, will override `self.eval_dataset`. If it is a [`~datasets.Dataset`], columns not accepted
-                by the `model.forward()` method are automatically removed. It must implement `__len__`.
+                by the `models.forward()` method are automatically removed. It must implement `__len__`.
         """
         if eval_dataset is None and self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
@@ -981,7 +981,7 @@ class Trainer:
         Args:
             test_dataset (`torch.utils.data.Dataset`, *optional*):
                 The test dataset to use. If it is a [`~datasets.Dataset`], columns not accepted by the
-                `model.forward()` method are automatically removed. It must implement `__len__`.
+                `models.forward()` method are automatically removed. It must implement `__len__`.
         """
         data_collator = self.data_collator
 
@@ -1370,7 +1370,7 @@ class Trainer:
             model = self.ipex_optimize_model(model, training, dtype=dtype)
 
         if is_sagemaker_mp_enabled():
-            # Wrapping the base model twice in a DistributedModel will raise an error.
+            # Wrapping the base models twice in a DistributedModel will raise an error.
             if isinstance(self.model_wrapped, smp.model.DistributedModel):
                 return self.model_wrapped
             return smp.DistributedModel(model, backward_passes_per_step=self.args.gradient_accumulation_steps)
@@ -1396,7 +1396,7 @@ class Trainer:
             model = self.torch_jit_model_eval(model, dataloader, training)
             self.jit_compilation_time = round(time.time() - start_time, 4)
 
-        # Note: in torch.distributed mode, there's no point in wrapping the model
+        # Note: in torch.distributed mode, there's no point in wrapping the models
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
         if not training:
             return model
@@ -1410,7 +1410,7 @@ class Trainer:
                 mixed_precision = self.args.fp16 or self.args.bf16
                 cpu_offload = ShardedDDPOption.OFFLOAD in self.args.sharded_ddp
                 zero_3 = self.sharded_ddp == ShardedDDPOption.ZERO_DP_3
-                # XXX: Breaking the self.model convention but I see no way around it for now.
+                # XXX: Breaking the self.models convention but I see no way around it for now.
                 if ShardedDDPOption.AUTO_WRAP in self.args.sharded_ddp:
                     model = auto_wrap(model)
                 self.model = model = FullyShardedDDP(
@@ -1444,7 +1444,7 @@ class Trainer:
                         for layer_class in self.args.fsdp_config["fsdp_transformer_layer_cls_to_wrap"]:
                             transformer_cls = get_module_class_from_name(model, layer_class)
                             if transformer_cls is None:
-                                raise Exception("Could not find the transformer layer class to wrap in the model.")
+                                raise Exception("Could not find the transformer layer class to wrap in the models.")
                             else:
                                 transformer_cls_to_wrap.add(transformer_cls)
                         auto_wrap_policy = functools.partial(
@@ -1461,7 +1461,7 @@ class Trainer:
                 if dtype is not None:
                     mixed_precision_policy = MixedPrecision(param_dtype=dtype, reduce_dtype=dtype, buffer_dtype=dtype)
                 if type(model) != FSDP:
-                    # XXX: Breaking the self.model convention but I see no way around it for now.
+                    # XXX: Breaking the self.models convention but I see no way around it for now.
                     self.model = model = FSDP(
                         model,
                         sharding_strategy=self.fsdp,
@@ -1494,7 +1494,7 @@ class Trainer:
                     for layer_class in self.args.fsdp_config["fsdp_transformer_layer_cls_to_wrap"]:
                         transformer_cls = get_module_class_from_name(model, layer_class)
                         if transformer_cls is None:
-                            raise Exception("Could not find the transformer layer class to wrap in the model.")
+                            raise Exception("Could not find the transformer layer class to wrap in the models.")
                         else:
                             transformer_cls_to_wrap.add(transformer_cls)
                     auto_wrap_policy = functools.partial(
@@ -1508,7 +1508,7 @@ class Trainer:
                     def auto_wrapper_callable(m, *args, **kwargs):
                         return FSDP(checkpoint_module(m), *args, **kwargs)
 
-                # Wrap the base model with an outer FSDP wrapper
+                # Wrap the base models with an outer FSDP wrapper
                 self.model = model = FSDP(
                     model,
                     auto_wrap_policy=auto_wrap_policy,
@@ -1567,11 +1567,11 @@ class Trainer:
             resume_from_checkpoint (`str` or `bool`, *optional*):
                 If a `str`, local path to a saved checkpoint as saved by a previous instance of [`Trainer`]. If a
                 `bool` and equals `True`, load the last checkpoint in *args.output_dir* as saved by a previous instance
-                of [`Trainer`]. If present, training will resume from the model/optimizer/scheduler states loaded here.
+                of [`Trainer`]. If present, training will resume from the models/optimizer/scheduler states loaded here.
             trial (`optuna.Trial` or `Dict[str, Any]`, *optional*):
                 The trial run or the hyperparameter dictionary for hyperparameter search.
             ignore_keys_for_eval (`List[str]`, *optional*)
-                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                A list of keys in the output of your models (if it is a dictionary) that should be ignored when
                 gathering predictions for evaluation during the training.
             kwargs:
                 Additional keyword arguments used to hide deprecated arguments
@@ -1607,14 +1607,14 @@ class Trainer:
         # Model re-init
         model_reloaded = False
         if self.model_init is not None:
-            # Seed must be set before instantiating the model when using model_init.
+            # Seed must be set before instantiating the models when using model_init.
             enable_full_determinism(self.args.seed) if self.args.full_determinism else set_seed(self.args.seed)
             self.model = self.call_model_init(trial)
             model_reloaded = True
             # Reinitializes optimizer and scheduler
             self.optimizer, self.lr_scheduler = None, None
 
-        # Load potential model checkpoint
+        # Load potential models checkpoint
         if isinstance(resume_from_checkpoint, bool) and resume_from_checkpoint:
             resume_from_checkpoint = get_last_checkpoint(args.output_dir)
             if resume_from_checkpoint is None:
@@ -1623,7 +1623,7 @@ class Trainer:
         if resume_from_checkpoint is not None and not is_sagemaker_mp_enabled() and args.deepspeed is None:
             self._load_from_checkpoint(resume_from_checkpoint)
 
-        # If model was re-initialized, put it on the right device and update self.model_wrapped
+        # If models was re-initialized, put it on the right device and update self.model_wrapped
         if model_reloaded:
             if self.place_model_on_device:
                 self._move_model_to_device(self.model, args.device)
@@ -1685,7 +1685,7 @@ class Trainer:
 
         if DebugOption.UNDERFLOW_OVERFLOW in self.args.debug:
             if self.args.n_gpu > 1:
-                # nn.DataParallel(model) replicates the model, creating new variables and module
+                # nn.DataParallel(models) replicates the models, creating new variables and module
                 # references registered here no longer work on other gpus, breaking the module
                 raise ValueError(
                     "Currently --debug underflow_overflow is not supported under DP. Please use DDP"
@@ -1724,7 +1724,7 @@ class Trainer:
         if is_sagemaker_mp_enabled() and resume_from_checkpoint is not None:
             self._load_from_checkpoint(resume_from_checkpoint, model)
 
-        # for the rest of this function `model` is the outside model, whether it was wrapped or not
+        # for the rest of this function `models` is the outside models, whether it was wrapped or not
         if model is not self.model:
             self.model_wrapped = model
 
@@ -1735,7 +1735,7 @@ class Trainer:
         self._load_optimizer_and_scheduler(resume_from_checkpoint)
 
         # important: at this point:
-        # self.model         is the Transformers Model
+        # self.models         is the Transformers Model
         # self.model_wrapped is DDP(Transformers Model), Deepspeed(Transformers Model), etc.
 
         # Train!
@@ -1778,7 +1778,7 @@ class Trainer:
                         f" {steps_trained_in_current_epoch} batches in the first epoch. If this takes a lot of time,"
                         " you can install the latest version of Accelerate with `pip install -U accelerate`.You can"
                         " also add the `--ignore_data_skip` flag to your launch command, but you will resume the"
-                        " training on data already seen by your model."
+                        " training on data already seen by your models."
                     )
                 else:
                     logger.info(
@@ -2011,9 +2011,9 @@ class Trainer:
             # Clean the state at the end of training
             delattr(self, "_past")
 
-        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
+        logger.info("\n\nTraining completed. Do not forget to share your models on huggingface.co/models =)\n\n")
         if args.load_best_model_at_end and self.state.best_model_checkpoint is not None:
-            # Wait for everyone to get here so we are sur the model has been saved by process 0.
+            # Wait for everyone to get here so we are sur the models has been saved by process 0.
             if is_torch_tpu_available():
                 xm.rendezvous("load_best_model_at_end")
             elif args.local_rank != -1:
@@ -2081,7 +2081,7 @@ class Trainer:
         ):
             raise ValueError(f"Can't find a valid checkpoint at {resume_from_checkpoint}")
 
-        logger.info(f"Loading model from {resume_from_checkpoint}.")
+        logger.info(f"Loading models from {resume_from_checkpoint}.")
 
         if os.path.isfile(os.path.join(resume_from_checkpoint, CONFIG_NAME)):
             config = PretrainedConfig.from_json_file(os.path.join(resume_from_checkpoint, CONFIG_NAME))
@@ -2094,7 +2094,7 @@ class Trainer:
                 )
 
         if os.path.isfile(os.path.join(resume_from_checkpoint, WEIGHTS_NAME)):
-            # If the model is on the GPU, it still works!
+            # If the models is on the GPU, it still works!
             if is_sagemaker_mp_enabled():
                 if os.path.isfile(os.path.join(resume_from_checkpoint, "user_content.pt")):
                     # If the 'user_content.pt' file exists, load with the new smp api.
@@ -2116,7 +2116,7 @@ class Trainer:
                     # release memory
                     del state_dict
             else:
-                # We load the model state dict on the CPU to avoid an OOM error.
+                # We load the models state dict on the CPU to avoid an OOM error.
                 state_dict = torch.load(os.path.join(resume_from_checkpoint, WEIGHTS_NAME), map_location="cpu")
                 # workaround for FSDP bug https://github.com/pytorch/pytorch/issues/82963
                 # which takes *args instead of **kwargs
@@ -2131,7 +2131,7 @@ class Trainer:
                 self._issue_warnings_after_load(load_result)
 
     def _load_best_model(self):
-        logger.info(f"Loading best model from {self.state.best_model_checkpoint} (score: {self.state.best_metric}).")
+        logger.info(f"Loading best models from {self.state.best_model_checkpoint} (score: {self.state.best_metric}).")
         best_model_path = os.path.join(self.state.best_model_checkpoint, WEIGHTS_NAME)
         model = self.model_wrapped if is_sagemaker_mp_enabled() else self.model
         if os.path.exists(best_model_path):
@@ -2170,9 +2170,9 @@ class Trainer:
                         state_dict["_smp_is_partial"] = False
                         load_result = model.load_state_dict(state_dict, strict=True)
                 else:
-                    # We load the model state dict on the CPU to avoid an OOM error.
+                    # We load the models state dict on the CPU to avoid an OOM error.
                     state_dict = torch.load(best_model_path, map_location="cpu")
-                    # If the model is on the GPU, it still works!
+                    # If the models is on the GPU, it still works!
                     # workaround for FSDP bug https://github.com/pytorch/pytorch/issues/82963
                     # which takes *args instead of **kwargs
                     load_result = model.load_state_dict(state_dict, False)
@@ -2186,7 +2186,7 @@ class Trainer:
                 self._issue_warnings_after_load(load_result)
         else:
             logger.warning(
-                f"Could not locate the best model at {best_model_path}, if you are running a distributed training "
+                f"Could not locate the best models at {best_model_path}, if you are running a distributed training "
                 "on multiple nodes, you should activate `--save_on_each_node`."
             )
 
@@ -2197,10 +2197,10 @@ class Trainer:
             ):
                 self.model.tie_weights()
             else:
-                logger.warning(f"There were missing keys in the checkpoint model loaded: {load_result.missing_keys}.")
+                logger.warning(f"There were missing keys in the checkpoint models loaded: {load_result.missing_keys}.")
         if len(load_result.unexpected_keys) != 0:
             logger.warning(
-                f"There were unexpected keys in the checkpoint model loaded: {load_result.unexpected_keys}."
+                f"There were unexpected keys in the checkpoint models loaded: {load_result.unexpected_keys}."
             )
 
     def _maybe_log_save_evaluate(self, tr_loss, model, trial, epoch, ignore_keys_for_eval):
@@ -2284,11 +2284,11 @@ class Trainer:
             xm.set_rng_state(checkpoint_rng_state["xla"])
 
     def _save_checkpoint(self, model, trial, metrics=None):
-        # In all cases, including ddp/dp/deepspeed, self.model is always a reference to the model we
+        # In all cases, including ddp/dp/deepspeed, self.models is always a reference to the models we
         # want to save except FullyShardedDDP.
-        # assert unwrap_model(model) is self.model, "internal model should be a reference to self.model"
+        # assert unwrap_model(models) is self.models, "internal models should be a reference to self.models"
 
-        # Save model checkpoint
+        # Save models checkpoint
         checkpoint_folder = f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
 
         if self.hp_search_backend is None and trial is None:
@@ -2298,7 +2298,7 @@ class Trainer:
         output_dir = os.path.join(run_dir, checkpoint_folder)
         self.save_model(output_dir, _internal_call=True)
         if self.deepspeed:
-            # under zero3 model file itself doesn't get saved since it's bogus! Unless deepspeed
+            # under zero3 models file itself doesn't get saved since it's bogus! Unless deepspeed
             # config `stage3_gather_16bit_weights_on_model_save` is True
             self.deepspeed.save_checkpoint(output_dir)
 
@@ -2329,7 +2329,7 @@ class Trainer:
                 if self.do_grad_scaling:
                     torch.save(self.scaler.state_dict(), os.path.join(output_dir, SCALER_NAME))
         elif self.args.should_save and not self.deepspeed:
-            # deepspeed.save_checkpoint above saves model/optim/sched
+            # deepspeed.save_checkpoint above saves models/optim/sched
             torch.save(self.optimizer.state_dict(), os.path.join(output_dir, OPTIMIZER_NAME))
             with warnings.catch_warnings(record=True) as caught_warnings:
                 torch.save(self.lr_scheduler.state_dict(), os.path.join(output_dir, SCHEDULER_NAME))
@@ -2337,7 +2337,7 @@ class Trainer:
             if self.do_grad_scaling:
                 torch.save(self.scaler.state_dict(), os.path.join(output_dir, SCALER_NAME))
 
-        # Determine the new best metric / best model checkpoint
+        # Determine the new best metric / best models checkpoint
         if metrics is not None and self.args.metric_for_best_model is not None:
             metric_to_check = self.args.metric_for_best_model
             if not metric_to_check.startswith("eval_"):
@@ -2373,7 +2373,7 @@ class Trainer:
         if is_torch_tpu_available():
             rng_states["xla"] = xm.get_rng_state()
 
-        # A process can arrive here before the process 0 has a chance to save the model, in which case output_dir may
+        # A process can arrive here before the process 0 has a chance to save the models, in which case output_dir may
         # not yet exist.
         os.makedirs(output_dir, exist_ok=True)
 
@@ -2395,7 +2395,7 @@ class Trainer:
             return
 
         if self.deepspeed:
-            # deepspeed loads optimizer/lr_scheduler together with the model in deepspeed_init
+            # deepspeed loads optimizer/lr_scheduler together with the models in deepspeed_init
             return
 
         checkpoint_file_exists = (
@@ -2464,7 +2464,7 @@ class Trainer:
         <Tip warning={true}>
 
         To use this method, you need to have provided a `model_init` when initializing your [`Trainer`]: we need to
-        reinitialize the model at each new run. This is incompatible with the `optimizers` argument, so you need to
+        reinitialize the models at each new run. This is incompatible with the `optimizers` argument, so you need to
         subclass [`Trainer`] and override the method [`~Trainer.create_optimizer_and_scheduler`] for custom
         optimizer/scheduler.
 
@@ -2524,7 +2524,7 @@ class Trainer:
         self.hp_search_backend = backend
         if self.model_init is None:
             raise RuntimeError(
-                "To use hyperparameter search, you need to pass your model through a model_init function."
+                "To use hyperparameter search, you need to pass your models through a model_init function."
             )
 
         self.hp_space = default_hp_space[backend] if hp_space is None else hp_space
@@ -2561,7 +2561,7 @@ class Trainer:
 
     def _prepare_input(self, data: Union[torch.Tensor, Any]) -> Union[torch.Tensor, Any]:
         """
-        Prepares one `data` before feeding it to the model, be it a tensor or a nested list/dictionary of tensors.
+        Prepares one `data` before feeding it to the models, be it a tensor or a nested list/dictionary of tensors.
         """
         if isinstance(data, Mapping):
             return type(data)({k: self._prepare_input(v) for k, v in data.items()})
@@ -2572,21 +2572,21 @@ class Trainer:
             if self.deepspeed and (torch.is_floating_point(data) or torch.is_complex(data)):
                 # NLP models inputs are int/uint and those get adjusted to the right dtype of the
                 # embedding. Other models such as wav2vec2's inputs are already float and thus
-                # may need special handling to match the dtypes of the model
+                # may need special handling to match the dtypes of the models
                 kwargs.update({"dtype": self.args.hf_deepspeed_config.dtype()})
             return data.to(**kwargs)
         return data
 
     def _prepare_inputs(self, inputs: Dict[str, Union[torch.Tensor, Any]]) -> Dict[str, Union[torch.Tensor, Any]]:
         """
-        Prepare `inputs` before feeding them to the model, converting them to tensors if they are not already and
+        Prepare `inputs` before feeding them to the models, converting them to tensors if they are not already and
         handling potential state.
         """
         inputs = self._prepare_input(inputs)
         if len(inputs) == 0:
             raise ValueError(
-                "The batch received was empty, your model won't be able to train on it. Double-check that your "
-                f"training dataset contains keys expected by the model: {','.join(self._signature_columns)}."
+                "The batch received was empty, your models won't be able to train on it. Double-check that your "
+                f"training dataset contains keys expected by the models: {','.join(self._signature_columns)}."
             )
         if self.args.past_index >= 0 and self._past is not None:
             inputs["mems"] = self._past
@@ -2626,12 +2626,12 @@ class Trainer:
 
         Args:
             model (`nn.Module`):
-                The model to train.
+                The models to train.
             inputs (`Dict[str, Union[torch.Tensor, Any]]`):
-                The inputs and targets of the model.
+                The inputs and targets of the models.
 
-                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
-                argument `labels`. Check your model's documentation for all accepted arguments.
+                The dictionary will be unpacked before being fed to the models. Most models expect the targets under the
+                argument `labels`. Check your models's documentation for all accepted arguments.
 
         Return:
             `torch.Tensor`: The tensor with training loss on this batch.
@@ -2690,10 +2690,10 @@ class Trainer:
         else:
             if isinstance(outputs, dict) and "loss" not in outputs:
                 raise ValueError(
-                    "The model did not return a loss from the inputs, only the following keys: "
+                    "The models did not return a loss from the inputs, only the following keys: "
                     f"{','.join(outputs.keys())}. For reference, the inputs it received are {','.join(inputs.keys())}."
                 )
-            # We don't use .loss here since the model may return tuples instead of ModelOutput.
+            # We don't use .loss here since the models may return tuples instead of ModelOutput.
             loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
 
         return (loss, outputs) if return_outputs else loss
@@ -2719,7 +2719,7 @@ class Trainer:
 
     def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
         """
-        Will save the model, so you can reload it using `from_pretrained()`.
+        Will save the models, so you can reload it using `from_pretrained()`.
 
         Will only save from the main process.
         """
@@ -2730,13 +2730,13 @@ class Trainer:
         if is_torch_tpu_available():
             self._save_tpu(output_dir)
         elif is_sagemaker_mp_enabled():
-            # Calling the state_dict needs to be done on the wrapped model and on all processes.
+            # Calling the state_dict needs to be done on the wrapped models and on all processes.
             os.makedirs(output_dir, exist_ok=True)
             state_dict = self.model_wrapped.state_dict()
             if self.args.should_save:
                 self._save(output_dir, state_dict=state_dict)
             if IS_SAGEMAKER_MP_POST_1_10:
-                # 'user_content.pt' indicates model state_dict saved with smp >= 1.10
+                # 'user_content.pt' indicates models state_dict saved with smp >= 1.10
                 Path(os.path.join(output_dir, "user_content.pt")).touch()
         elif (
             ShardedDDPOption.ZERO_DP_2 in self.args.sharded_ddp
@@ -2763,12 +2763,12 @@ class Trainer:
                         # logger.info(f"deepspeed zero3: removing {file}, see zero_to_fp32.py to recover weights")
                         os.remove(file)
 
-                # now save the real model if stage3_gather_16bit_weights_on_model_save=True
+                # now save the real models if stage3_gather_16bit_weights_on_model_save=True
                 # if false it will not be saved.
                 # This must be called on all ranks
                 if not self.deepspeed.save_16bit_model(output_dir, WEIGHTS_NAME):
                     logger.warning(
-                        "deepspeed.save_16bit_model didn't save the model, since"
+                        "deepspeed.save_16bit_model didn't save the models, since"
                         " stage3_gather_16bit_weights_on_model_save=false. Saving the full checkpoint instead, use"
                         " zero_to_fp32.py to recover weights"
                     )
@@ -2783,13 +2783,13 @@ class Trainer:
 
     def _save_tpu(self, output_dir: Optional[str] = None):
         output_dir = output_dir if output_dir is not None else self.args.output_dir
-        logger.info(f"Saving model checkpoint to {output_dir}")
+        logger.info(f"Saving models checkpoint to {output_dir}")
 
         if xm.is_master_ordinal():
             os.makedirs(output_dir, exist_ok=True)
             torch.save(self.args, os.path.join(output_dir, TRAINING_ARGS_NAME))
 
-        # Save a trained model and configuration using `save_pretrained()`.
+        # Save a trained models and configuration using `save_pretrained()`.
         # They can then be reloaded using `from_pretrained()`
         xm.rendezvous("saving_checkpoint")
         if not isinstance(self.model, PreTrainedModel):
@@ -2801,7 +2801,7 @@ class Trainer:
                     save_function=xm.save,
                 )
             else:
-                logger.info("Trainer.model is not a `PreTrainedModel`, only saving its state dict.")
+                logger.info("Trainer.models is not a `PreTrainedModel`, only saving its state dict.")
                 state_dict = self.model.state_dict()
                 xm.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
         else:
@@ -2813,8 +2813,8 @@ class Trainer:
         # If we are executing this function, we are the process zero, so we don't check for that.
         output_dir = output_dir if output_dir is not None else self.args.output_dir
         os.makedirs(output_dir, exist_ok=True)
-        logger.info(f"Saving model checkpoint to {output_dir}")
-        # Save a trained model and configuration using `save_pretrained()`.
+        logger.info(f"Saving models checkpoint to {output_dir}")
+        # Save a trained models and configuration using `save_pretrained()`.
         # They can then be reloaded using `from_pretrained()`
         if not isinstance(self.model, PreTrainedModel):
             if isinstance(unwrap_model(self.model), PreTrainedModel):
@@ -2822,7 +2822,7 @@ class Trainer:
                     state_dict = self.model.state_dict()
                 unwrap_model(self.model).save_pretrained(output_dir, state_dict=filtered_state_dict)
             else:
-                logger.info("Trainer.model is not a `PreTrainedModel`, only saving its state dict.")
+                logger.info("Trainer.models is not a `PreTrainedModel`, only saving its state dict.")
                 if state_dict is None:
                     state_dict = self.model.state_dict()
                 torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
@@ -2836,16 +2836,16 @@ class Trainer:
                         filtered_state_dict[k] = state_dict[k]
                 self.model.save_pretrained(output_dir, state_dict=filtered_state_dict)
             else:
-                print("Saving the whole model")
+                print("Saving the whole models")
                 self.model.save_pretrained(output_dir, state_dict=state_dict)
         if self.tokenizer is not None:
             self.tokenizer.save_pretrained(output_dir)
 
-        # Good practice: save your training arguments together with the trained model
+        # Good practice: save your training arguments together with the trained models
         torch.save(self.args, os.path.join(output_dir, TRAINING_ARGS_NAME))
 
     def store_flos(self):
-        # Storing the number of floating-point operations that went into the model
+        # Storing the number of floating-point operations that went into the models
         if self.args.local_rank != -1:
             self.state.total_flos += (
                 distributed_broadcast_scalars([self.current_flos], device=self.args.device).sum().item()
@@ -2872,7 +2872,7 @@ class Trainer:
 
         checkpoints_sorted = sorted(ordering_and_checkpoint_path)
         checkpoints_sorted = [checkpoint[1] for checkpoint in checkpoints_sorted]
-        # Make sure we don't delete the best model.
+        # Make sure we don't delete the best models.
         if self.state.best_model_checkpoint is not None:
             best_model_index = checkpoints_sorted.index(str(Path(self.state.best_model_checkpoint)))
             for i in range(best_model_index, len(checkpoints_sorted) - 2):
@@ -2921,10 +2921,10 @@ class Trainer:
         Args:
             eval_dataset (`Dataset`, *optional*):
                 Pass a dataset if you wish to override `self.eval_dataset`. If it is a [`~datasets.Dataset`], columns
-                not accepted by the `model.forward()` method are automatically removed. It must implement the `__len__`
+                not accepted by the `models.forward()` method are automatically removed. It must implement the `__len__`
                 method.
             ignore_keys (`Lst[str]`, *optional*):
-                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                A list of keys in the output of your models (if it is a dictionary) that should be ignored when
                 gathering predictions.
             metric_key_prefix (`str`, *optional*, defaults to `"eval"`):
                 An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
@@ -2987,9 +2987,9 @@ class Trainer:
         Args:
             test_dataset (`Dataset`):
                 Dataset to run the predictions on. If it is an `datasets.Dataset`, columns not accepted by the
-                `model.forward()` method are automatically removed. Has to implement the method `__len__`
+                `models.forward()` method are automatically removed. Has to implement the method `__len__`
             ignore_keys (`Lst[str]`, *optional*):
-                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                A list of keys in the output of your models (if it is a dictionary) that should be ignored when
                 gathering predictions.
             metric_key_prefix (`str`, *optional*, defaults to `"test"`):
                 An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
@@ -3308,22 +3308,22 @@ class Trainer:
         ignore_keys: Optional[List[str]] = None,
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
-        Perform an evaluation step on `model` using `inputs`.
+        Perform an evaluation step on `models` using `inputs`.
 
         Subclass and override to inject custom behavior.
 
         Args:
             model (`nn.Module`):
-                The model to evaluate.
+                The models to evaluate.
             inputs (`Dict[str, Union[torch.Tensor, Any]]`):
-                The inputs and targets of the model.
+                The inputs and targets of the models.
 
-                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
-                argument `labels`. Check your model's documentation for all accepted arguments.
+                The dictionary will be unpacked before being fed to the models. Most models expect the targets under the
+                argument `labels`. Check your models's documentation for all accepted arguments.
             prediction_loss_only (`bool`):
                 Whether or not to return the loss only.
             ignore_keys (`Lst[str]`, *optional*):
-                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                A list of keys in the output of your models (if it is a dictionary) that should be ignored when
                 gathering predictions.
 
         Return:
@@ -3333,7 +3333,7 @@ class Trainer:
         has_labels = False if len(self.label_names) == 0 else all(inputs.get(k) is not None for k in self.label_names)
         # For CLIP-like models capable of returning loss values.
         # If `return_loss` is not specified or being `None` in `inputs`, we check if the default value of `return_loss`
-        # is `True` in `model.forward`.
+        # is `True` in `models.forward`.
         return_loss = inputs.get("return_loss", None)
         if return_loss is None:
             return_loss = self.can_return_loss
@@ -3408,12 +3408,12 @@ class Trainer:
     def floating_point_ops(self, inputs: Dict[str, Union[torch.Tensor, Any]]):
         """
         For models that inherit from [`PreTrainedModel`], uses that method to compute the number of floating point
-        operations for every backward + forward pass. If using another model, either implement such a method in the
-        model or subclass and override this method.
+        operations for every backward + forward pass. If using another models, either implement such a method in the
+        models or subclass and override this method.
 
         Args:
             inputs (`Dict[str, Union[torch.Tensor, Any]]`):
-                The inputs and targets of the model.
+                The inputs and targets of the models.
 
         Returns:
             `int`: The number of floating-point operations.
@@ -3483,29 +3483,29 @@ class Trainer:
         dataset_args: Union[str, List[str], None] = None,
     ):
         """
-        Creates a draft of a model card using the information available to the `Trainer`.
+        Creates a draft of a models card using the information available to the `Trainer`.
 
         Args:
             language (`str`, *optional*):
-                The language of the model (if applicable)
+                The language of the models (if applicable)
             license (`str`, *optional*):
-                The license of the model. Will default to the license of the pretrained model used, if the original
-                model given to the `Trainer` comes from a repo on the Hub.
+                The license of the models. Will default to the license of the pretrained models used, if the original
+                models given to the `Trainer` comes from a repo on the Hub.
             tags (`str` or `List[str]`, *optional*):
-                Some tags to be included in the metadata of the model card.
+                Some tags to be included in the metadata of the models card.
             model_name (`str`, *optional*):
-                The name of the model.
+                The name of the models.
             finetuned_from (`str`, *optional*):
-                The name of the model used to fine-tune this one (if applicable). Will default to the name of the repo
-                of the original model given to the `Trainer` (if it comes from the Hub).
+                The name of the models used to fine-tune this one (if applicable). Will default to the name of the repo
+                of the original models given to the `Trainer` (if it comes from the Hub).
             tasks (`str` or `List[str]`, *optional*):
-                One or several task identifiers, to be included in the metadata of the model card.
+                One or several task identifiers, to be included in the metadata of the models card.
             dataset_tags (`str` or `List[str]`, *optional*):
-                One or several dataset tags, to be included in the metadata of the model card.
+                One or several dataset tags, to be included in the metadata of the models card.
             dataset (`str` or `List[str]`, *optional*):
-                One or several dataset identifiers, to be included in the metadata of the model card.
+                One or several dataset identifiers, to be included in the metadata of the models card.
             dataset_args (`str` or `List[str]`, *optional*):
-               One or several dataset arguments, to be included in the metadata of the model card.
+               One or several dataset arguments, to be included in the metadata of the models card.
         """
         if not self.is_world_process_zero():
             return
@@ -3535,7 +3535,7 @@ class Trainer:
             return
 
         output_dir = self.args.output_dir
-        # To avoid a new synchronization of all model weights, we just copy the file from the checkpoint folder
+        # To avoid a new synchronization of all models weights, we just copy the file from the checkpoint folder
         modeling_files = [CONFIG_NAME, WEIGHTS_NAME]
         for modeling_file in modeling_files:
             if os.path.isfile(os.path.join(checkpoint_folder, modeling_file)):
@@ -3570,7 +3570,7 @@ class Trainer:
 
     def push_to_hub(self, commit_message: Optional[str] = "End of training", blocking: bool = True, **kwargs) -> str:
         """
-        Upload *self.model* and *self.tokenizer* to the 🤗 model hub on the repo *self.args.hub_model_id*.
+        Upload *self.models* and *self.tokenizer* to the 🤗 models hub on the repo *self.args.hub_model_id*.
 
         Parameters:
             commit_message (`str`, *optional*, defaults to `"End of training"`):
@@ -3581,7 +3581,7 @@ class Trainer:
                 Additional keyword arguments passed along to [`~Trainer.create_model_card`].
 
         Returns:
-            The url of the commit of your model in the given repository if `blocking=False`, a tuple with the url of
+            The url of the commit of your models in the given repository if `blocking=False`, a tuple with the url of
             the commit and an object to track the progress of the commit if `blocking=True`
         """
         # If a user calls manually `push_to_hub` with `self.args.push_to_hub = False`, we try to create the repo but
@@ -3612,15 +3612,15 @@ class Trainer:
         git_head_commit_url = self.repo.push_to_hub(
             commit_message=commit_message, blocking=blocking, auto_lfs_prune=True
         )
-        # push separately the model card to be independant from the rest of the model
+        # push separately the models card to be independant from the rest of the models
         if self.args.should_save:
             self.create_model_card(model_name=model_name, **kwargs)
             try:
                 self.repo.push_to_hub(
-                    commit_message="update model card README.md", blocking=blocking, auto_lfs_prune=True
+                    commit_message="update models card README.md", blocking=blocking, auto_lfs_prune=True
                 )
             except EnvironmentError as exc:
-                logger.error(f"Error pushing update to the model card. Please read logs and retry.\n${exc}")
+                logger.error(f"Error pushing update to the models card. Please read logs and retry.\n${exc}")
 
         return git_head_commit_url
 

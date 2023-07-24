@@ -24,9 +24,9 @@
    "source": [
     "from transformers import AutoTokenizer, AutoModel\n",
     "tokenizer = AutoTokenizer.from_pretrained(\"../chatglm2-6b\", trust_remote_code=True)\n",
-    "model = AutoModel.from_pretrained(\"../chatglm2-6b\", trust_remote_code=True, device='cuda')\n",
-    "model = model.eval()\n",
-    "response, history = model.chat(tokenizer, \"你好，我想听你讲个故事\", history=[])\n",
+    "models = AutoModel.from_pretrained(\"../chatglm2-6b\", trust_remote_code=True, device='cuda')\n",
+    "models = models.eval()\n",
+    "response, history = models.chat(tokenizer, \"你好，我想听你讲个故事\", history=[])\n",
     "print(response)"
    ]
   },
@@ -42,7 +42,7 @@
   "kernelspec": {
    "display_name": "ChatGLM2",
    "language": "python",
-   "name": "chatglm2"
+   "name": "chatglm2-6b"
   },
   "language_info": {
    "codemirror_mode": {

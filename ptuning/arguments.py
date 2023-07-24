@@ -5,11 +5,11 @@ from typing import Optional
 @dataclass
 class ModelArguments:
     """
-    Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
+    Arguments pertaining to which models/config/tokenizer we are going to fine-tune from.
     """
 
     model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        metadata={"help": "Path to pretrained models or models identifier from huggingface.co/models"}
     )
     ptuning_checkpoint: str = field(
         default=None, metadata={"help": "Path to p-tuning v2 checkpoints"}
@@ -30,7 +30,7 @@ class ModelArguments:
     )
     model_revision: str = field(
         default="main",
-        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+        metadata={"help": "The specific models version to use (can be a branch name, tag name or commit id)."},
     )
     use_auth_token: bool = field(
         default=False,
@@ -46,7 +46,7 @@ class ModelArguments:
         metadata={
             "help": (
                 "Whether to automatically resize the position embeddings if `max_source_length` exceeds "
-                "the model's position embeddings."
+                "the models's position embeddings."
             )
         },
     )
@@ -64,7 +64,7 @@ class ModelArguments:
 @dataclass
 class DataTrainingArguments:
     """
-    Arguments pertaining to what data we are going to input our model for training and eval.
+    Arguments pertaining to what data we are going to input our models for training and eval.
     """
 
     lang: Optional[str] = field(default=None, metadata={"help": "Language id for summarization."})
@@ -135,7 +135,7 @@ class DataTrainingArguments:
             "help": (
                 "The maximum total sequence length for validation target text after tokenization. Sequences longer "
                 "than this will be truncated, sequences shorter will be padded. Will default to `max_target_length`."
-                "This argument is also used to override the ``max_length`` param of ``model.generate``, which is used "
+                "This argument is also used to override the ``max_length`` param of ``models.generate``, which is used "
                 "during ``evaluate`` and ``predict``."
             )
         },
@@ -144,7 +144,7 @@ class DataTrainingArguments:
         default=False,
         metadata={
             "help": (
-                "Whether to pad all samples to model maximum sentence length. "
+                "Whether to pad all samples to models maximum sentence length. "
                 "If False, will pad the samples dynamically when batching to the maximum length in the batch. More "
                 "efficient on GPU but very bad for TPU."
             )
@@ -181,7 +181,7 @@ class DataTrainingArguments:
         default=None,
         metadata={
             "help": (
-                "Number of beams to use for evaluation. This argument will be passed to ``model.generate``, "
+                "Number of beams to use for evaluation. This argument will be passed to ``models.generate``, "
                 "which is used during ``evaluate`` and ``predict``."
             )
         },

@@ -14,8 +14,8 @@ def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
     per_gpu_layers = 30 / num_gpus
 
     # bugfix: 在linux中调用torch.embedding传入的weight,input不在同一device上,导致RuntimeError
-    # windows下 model.device 会被设置成 transformer.word_embeddings.device
-    # linux下 model.device 会被设置成 lm_head.device
+    # windows下 models.device 会被设置成 transformer.word_embeddings.device
+    # linux下 models.device 会被设置成 lm_head.device
     # 在调用chat或者stream_chat时,input_ids会被放到model.device上
     # 如果transformer.word_embeddings.device和model.device不同,则会导致RuntimeError
     # 因此这里将transformer.word_embeddings,transformer.final_layernorm,lm_head都放到第一张卡上

@@ -1,17 +1,18 @@
-import pandas as pd
+from Utils.extractJson import extractJson, JsonValidate
 from Utils.GetRelationShips import GetRelationShips
 from Utils.GetEventType import GetEventType
 from Utils.GetEventDetail import GetEventDetail
-from Utils.load_model import chatglm
-from Utils.extractJson import extractJson, JsonValidate
+# from Utils.load_model import chatglm
 import json
-import tqdm
+import os
+import sys
+sys.path.append(os.getcwd())
 
 
-model = chatglm()
+# models = chatglm()
 
 
-def process(Text):
+def process(Text, model):
     relation = GetRelationShips(Text, model)
     relationJson = extractJson(relation)
     relationJson = relationJson if JsonValidate(relationJson) else 'Json Invalidate'
@@ -65,13 +66,5 @@ def process(Text):
         return f"ERROR:{e}"
 
 if __name__ == "__main__":
-    df = pd.read_csv("./qingbao.csv",  on_bad_lines='skip')
-    res = []
-    for i in df['origin']:
-        res.append(i)
-
-    ana_res = []
-    for i in tqdm.tqdm(res):
-        ana_res.append({"事件描述": i, "事件分析结果": relationJson})
-        with open("./analysis_result.json", 'w', encoding='utf-8') as f:
-            json.dump(ana_res, f, indent=4)
+    text = "卢卡申科接着说：“热舒夫对他们来说是不可接受的。他们在阿尔捷莫夫斯克郊区作战时，他们知道（乌克兰的）军车来自哪里，他们由此印象深刻：热舒夫是我们的麻烦。当然，正如我们一致同意的，我把他们安顿在了白俄罗斯中部，我不想重新部署他们，因为他们现在精神有些低落……”"
+    print(process(text))

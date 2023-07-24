@@ -2,6 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/THUDM/chatglm2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/THUDM/chatglm2-6b" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/chatglm2" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/chatglm2-6b" vcs="Git" />
   </component>
 </project>

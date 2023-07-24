@@ -1,9 +1,11 @@
 from transformers import AutoTokenizer, AutoModel
 
+
 class chatglm:
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained("../chatglm2-6b", trust_remote_code=True)
-        self.model_0 = AutoModel.from_pretrained("../chatglm2-6b", trust_remote_code=True, device='cuda')
+        route = "THUDM/chatglm2-6b"
+        self.tokenizer = AutoTokenizer.from_pretrained(route, trust_remote_code=True, revision="v1.0")
+        self.model_0 = AutoModel.from_pretrained(route, trust_remote_code=True, device='cuda', revision="v1.0")
         self.model = self.model_0.eval()
 
     def response(self, textIn, history=None):

@@ -46,10 +46,10 @@ class Seq2SeqTrainer(Trainer):
         Args:
             eval_dataset (`Dataset`, *optional*):
                 Pass a dataset if you wish to override `self.eval_dataset`. If it is an [`~datasets.Dataset`], columns
-                not accepted by the `model.forward()` method are automatically removed. It must implement the `__len__`
+                not accepted by the `models.forward()` method are automatically removed. It must implement the `__len__`
                 method.
             ignore_keys (`List[str]`, *optional*):
-                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                A list of keys in the output of your models (if it is a dictionary) that should be ignored when
                 gathering predictions.
             metric_key_prefix (`str`, *optional*, defaults to `"eval"`):
                 An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
@@ -93,9 +93,9 @@ class Seq2SeqTrainer(Trainer):
         Args:
             test_dataset (`Dataset`):
                 Dataset to run the predictions on. If it is a [`~datasets.Dataset`], columns not accepted by the
-                `model.forward()` method are automatically removed. Has to implement the method `__len__`
+                `models.forward()` method are automatically removed. Has to implement the method `__len__`
             ignore_keys (`List[str]`, *optional*):
-                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                A list of keys in the output of your models (if it is a dictionary) that should be ignored when
                 gathering predictions.
             metric_key_prefix (`str`, *optional*, defaults to `"eval"`):
                 An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
@@ -143,18 +143,18 @@ class Seq2SeqTrainer(Trainer):
         ignore_keys: Optional[List[str]] = None,
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
-        Perform an evaluation step on `model` using `inputs`.
+        Perform an evaluation step on `models` using `inputs`.
 
         Subclass and override to inject custom behavior.
 
         Args:
             model (`nn.Module`):
-                The model to evaluate.
+                The models to evaluate.
             inputs (`Dict[str, Union[torch.Tensor, Any]]`):
-                The inputs and targets of the model.
+                The inputs and targets of the models.
 
-                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
-                argument `labels`. Check your model's documentation for all accepted arguments.
+                The dictionary will be unpacked before being fed to the models. Most models expect the targets under the
+                argument `labels`. Check your models's documentation for all accepted arguments.
             prediction_loss_only (`bool`):
                 Whether or not to return the loss only.
 
@@ -192,7 +192,7 @@ class Seq2SeqTrainer(Trainer):
 
         # prepare generation inputs
         # some encoder-decoder models can have varying encoder's and thus
-        # varying model input names
+        # varying models input names
         if hasattr(self.model, "encoder") and self.model.encoder.main_input_name != self.model.main_input_name:
             generation_inputs = inputs[self.model.encoder.main_input_name]
         else:
@@ -238,7 +238,7 @@ class Seq2SeqTrainer(Trainer):
             if self.model.config.pad_token_id is not None:
                 pad_token_id = self.model.config.pad_token_id
             else:
-                raise ValueError("Pad_token_id must be set in the configuration of the model, in order to pad tensors")
+                raise ValueError("Pad_token_id must be set in the configuration of the models, in order to pad tensors")
 
         padded_tensor = pad_token_id * torch.ones(
             (tensor.shape[0], max_length), dtype=tensor.dtype, device=tensor.device
