@@ -4,30 +4,37 @@
 
 本项目使用提示工程，经过多轮询问得到输入文本的事件关系
 
+![WechatIMG976.jpg](src/WechatIMG976.jpg)
+
 ## usage
 
 ### 环境配置
 
 首先需要下载本仓库：
+
 ```shell
 git clone https://github.com/Andrew82106/LLM_NER.git
 cd LLM_NER
 ```
 
 然后使用 pip 安装依赖：
+
 ```
 pip install -r requirements.txt
 ```
+
 其中 `transformers` 库版本推荐为 `4.30.2`，`torch` 推荐使用 2.0 及以上的版本，以获得最佳的推理性能。
 
-然后下载模型权重文件
+本项目默认使用ChatGLM2-6B模型，因此此时下ChatGLM2-6B模型权重文件
 
 从 Hugging Face Hub 下载模型需要先[安装Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
+
 ```Shell
 git clone https://huggingface.co/THUDM/chatglm2-6b
 ```
 
 如果你从 Hugging Face Hub 上下载 checkpoint 的速度较慢，可以只下载模型实现
+
 ```Shell
 GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/THUDM/chatglm2-6b
 ```

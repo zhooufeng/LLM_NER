@@ -14,7 +14,7 @@ Example1 = """
 
 重点关注事件的列表：{}
 
-输出：['攻击事件', '恶意软件事件']
+输出：['恶意软件攻击', '网络攻击']
 """.format(EventList)
 Example2 = """
 例子2：
@@ -23,7 +23,16 @@ Example2 = """
 
 重点关注事件的列表：{}
 
-输出：['攻击事件', '间谍活动', '漏洞事件']
+输出：['间谍攻击活动', '漏洞事件']
+""".format(EventList)
+Example3 = """
+例子3：
+
+文字：IceXLoader是一种商业恶意软件，在黑客论坛中以118美元的价格出售，主要用于在受害主机中下载和执行其他的恶意软件。
+
+重点关注事件的列表：{}
+
+输出：['下载', '间谍攻击活动', '恶意软件攻击']
 """.format(EventList)
 Question1 = """
 问题1：
@@ -36,7 +45,7 @@ Question1 = """
 """
 
 def IdentifyEvents(text, model=None):
-    prompt = background + Example1 + Example2 + Question1.format(text, EventList)
+    prompt = background + Example1 + Example2 + Example3 + Question1.format(text, EventList)
     if model == None:
         model = chatglm()
     return model.response(prompt)[0]

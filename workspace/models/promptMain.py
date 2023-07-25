@@ -1,4 +1,4 @@
-from Utils.extractJson import extractJson, JsonValidate
+from Utils.extractJson import extractJson, JsonValidate, JsonValidate_Detail
 from Utils.GetRelationShips import GetRelationShips
 from Utils.GetEventType import GetEventType
 from Utils.GetEventDetail import GetEventDetail
@@ -20,15 +20,24 @@ def detail(JsonIn, model):
         result = item.split("->")[1]
         reason_type = GetEventType(reason, model)
         result_type = GetEventType(result, model)
+        detail1 = extractJson(GetEventDetail(reason, reason_type, model))
+        detail2 = extractJson(GetEventDetail(result, result_type, model))
+        if not JsonValidate_Detail(detail1) or not JsonValidate_Detail(detail2):
+            WARNING("大模型输出的事件进行归类和细节分析json格式有误")
+            if not JsonValidate_Detail(detail1):
+                DEBUG(f"detail1:{detail1}")
+            if not JsonValidate_Detail(detail2):
+                DEBUG(f"detail1:{detail2}")
+            raise NotImplementedError
         relationJson["因果关系"][pos] = {
             "原因": {
                 "事件类型": reason_type,
-                "事件细节": GetEventDetail(reason, reason_type, model),
+                "事件细节": json.loads(detail1),
                 "事件描述": reason
             },
             "结果": {
                 "事件类型": result_type,
-                "事件细节": GetEventDetail(result, result_type, model),
+                "事件细节": json.loads(detail2),
                 "事件描述": result
             }
         }
@@ -40,15 +49,20 @@ def detail(JsonIn, model):
         result = item.split("->")[1]
         reason_type = GetEventType(reason, model)
         result_type = GetEventType(result, model)
+        detail1 = extractJson(GetEventDetail(reason, reason_type, model))
+        detail2 = extractJson(GetEventDetail(result, result_type, model))
+        if not JsonValidate_Detail(detail1) or not JsonValidate_Detail(detail2):
+            WARNING("大模型输出的事件进行归类和细节分析json格式有误")
+            raise NotImplementedError
         relationJson["顺承关系"][pos] = {
             "前一事件": {
                 "事件类型": reason_type,
-                "事件细节": GetEventDetail(reason, reason_type, model),
+                "事件细节": json.loads(detail1),
                 "事件描述": reason
             },
             "后一事件": {
                 "事件类型": result_type,
-                "事件细节": GetEventDetail(result, result_type, model),
+                "事件细节": json.loads(detail2),
                 "事件描述": result
             }
         }

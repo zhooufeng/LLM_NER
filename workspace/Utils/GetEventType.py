@@ -5,6 +5,7 @@ background = """
 我希望你能够以一名语言学家的身份完成我的任务。
 
 首先我会给你一段文字，然后我会给你备选的事件类型列表。
+
 你需要做的事情是，从备选的事件类型列表中选出一个最符合文字中描述情境的事件类型然后输出。
 """
 Example1 = """
@@ -25,6 +26,15 @@ Example2 = """
 
 输出：恶意软件事件
 """.format(EventList)
+Example3 = """
+例子2：
+
+文字：样本伪装成xls的scr文件,会释放持久化组件与RAT对中招用户持续监控。
+
+备选事件类型列表：{}
+
+输出：监控
+""".format(EventList)
 Question1 = """
 问题1：
 
@@ -36,7 +46,7 @@ Question1 = """
 """
 
 def GetEventType(text, model=None):
-    prompt = background + Example1 + Example2 + Question1.format(text, EventList)
+    prompt = background + Example1 + Example2 + Example3 + Question1.format(text, EventList)
     if model == None:
         model = chatglm()
     return model.response(prompt)[0]

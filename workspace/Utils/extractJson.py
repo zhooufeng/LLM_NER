@@ -1,6 +1,9 @@
 import re
 import json
-from Utils.debugformat import INFO, DEBUG, WARNING
+try:
+    from Utils.debugformat import INFO, DEBUG, WARNING
+except:
+    from debugformat import INFO, DEBUG, WARNING
 
 def extractJson(text):
     match = re.search(r'{[^{}]+}', text)
@@ -31,10 +34,20 @@ def JsonValidate(json_str):
     return True
 
 
+def JsonValidate_Detail(json_str):
+    try:
+        # DEBUG(json_str)
+        json_object = json.loads(json_str)
+    except Exception as e:
+        DEBUG(e)
+        # raise e
+        return False
+    return True
+
+
 if __name__ == "__main__":
-    text = """{
-'因果关系': ['研究人员发现透明部落利用外贸主题的链接进行攻击活动样本'],
-'顺承关系': ['研究人员发现透明部落使用的RAT既不是其专属木马CrimsonRAT，也不是常用的ObliqueRAT，而是一款简单的RAT，包含屏幕监控、键盘监控、网络传输的功能']}"""
+    text = """{"攻击对象": "SteamHide恶意软件", "攻击者": "未知", "攻击手段": "滥用Steam游戏平台进行传播", "攻击工具": "None"}"""
+    print(JsonValidate_Detail(text))
     result = extractJson(text)
     if result:
         print(result)
