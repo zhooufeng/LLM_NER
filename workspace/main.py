@@ -1,6 +1,17 @@
-import json
+# -*- coding:UTF-8 -*-
 
+import json
+import argparse
 from configs.pathcfg import Pcfg
+parser = argparse.ArgumentParser(description='Parameters for pretraining')
+parser.add_argument('--task', choices=["single", "batches"], dest='TASK', help='task name, e.g., ok, aok_val, aok_test', type=str, default="single")
+parser.add_argument('--savepath', dest='SAVEPATH', help='task name, e.g., ok, aok_val, aok_test', type=str, default=Pcfg.jsonPath + "/debug1.json")
+args = parser.parse_args()
+TASK = args.TASK
+savepath = args.SAVEPATH
+print(f"[para config]:\n[TASK]={TASK}\n[savepath]={savepath}\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
+
 import pprint
 import tqdm
 from models import promptMain
@@ -12,11 +23,15 @@ class Runner:
     def __init__(self):
         self.model = chatglm()
 
-    def Run(self, Text):
+    def Run(self, Text, savePath=None):
         backCar = '\n'
         space = ' '
         INFO(f"启用单文本分析模式，文本长度:{len(Text)}，文本摘要:{Text.replace(backCar, '').replace(space, '')[:10]}")
-        return promptMain.process(Text=Text, model=self.model)
+        res = promptMain.process(Text=Text, model=self.model)
+        if savePath == None:
+            with open(Pcfg.jsonPath + "/debug.json", "w", encoding='utf-8') as f:
+                json.dump(res, f)
+        return res
 
     def RunInBatches(self, TextList, savePath=None):
         INFO(f"启用多文本分析模式，共{len(TextList)}文本")
@@ -47,14 +62,12 @@ class Runner:
 
 if __name__ == '__main__':
     A = Runner()
-    # A.checkModel()
-    debugText = """
-    近日，研究人员发现SteamHide恶意软件滥用Steam游戏平台进行传播。攻击者通过在Steam平台上更新个人资料头像将恶意软件以加密的形式隐藏其中。Steam平台只是承载恶意文件的工具。下载、解包和执行恶意负载的繁重工作由一个外部组件处理，该组件访问一个Steam配置文件上的图像。
-    """
-    TextList = [
-        debugText, debugText
-    ]
-    # print(A.Run(debugText))
-    res = A.RunInBatches(TextList, savePath=Pcfg.jsonPath + "/debug1.json")
-    # res = A.Run(debugText)
-    # pprint.pprint(res)
+    if TASK == "single":
+        with open(Pcfg.input + '/single.txt', "r", encoding='utf-8') as f:
+            content = f.read()
+            A.Run(content, savePath=savepath)
+    elif TASK == 'batches':
+        with open(Pcfg.input + '/batches.txt', "r", encoding='utf-8') as f:
+            content = f.read()
+            lst = str(content).split("\n")
+            A.RunInBatches(lst, savePath=savepath)

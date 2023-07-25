@@ -37,7 +37,9 @@ def GetRelationShips(text, model=None):
         model = chatglm()
     # DEBUG(f"prompt:{prompt}")
     relation = model.response(prompt)[0]
-    relationJson = extractJson(relation)
+    DEBUG(f"raw relation from LLM produce successfully")
+    relationJson = extractJson(relation).replace("\'", "\"")
+    DEBUG(f"relationJson from LLM:{relationJson}")
     relationJson = relationJson if JsonValidate(relationJson) else 'Json Invalidate'
     return relationJson
 

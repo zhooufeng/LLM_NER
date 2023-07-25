@@ -23,7 +23,7 @@ def DEBUG(TextIn):
     caller_frame = inspect.currentframe().f_back
     caller_filename = inspect.getframeinfo(caller_frame).filename
     caller_lineno = inspect.getframeinfo(caller_frame).lineno
-    print(f"[DEBUG]\tin file {os.path.basename(caller_filename)}(line {caller_lineno})\t{calcTime()}: {TextIn}")
+    # print(f"[DEBUG]\tin file {os.path.basename(caller_filename)}(line {caller_lineno})\t{calcTime()}: {TextIn}")
 
 
 def WARNING(TextIn):

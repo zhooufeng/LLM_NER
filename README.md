@@ -45,7 +45,19 @@ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/THUDM/chatglm2-6b
 
 ### 单文本处理
 
+将文本放到项目``ChatGLM2-6B/workspace/input/single.txt``中，然后运行：
+
+`` python main.py --task single --savepath ./single_ana_res.json``
+
+即可在文件``single_ana_res.json``中找到处理结果
+
 ### 文本批量处理
+
+将文本放到项目``ChatGLM2-6B/workspace/input/batches.txt``中，以换行分割样本，然后运行：
+
+`` python main.py --task batches --savepath ./batches_ana_res.json``
+
+即可在文件``batches_ana_res.json``中找到处理结果
 
 ## evaluate
 
